@@ -33,6 +33,17 @@ export function formatDate(date: Date | string) {
   }).format(new Date(date));
 }
 
+/**
+ * Ensure a callback/redirect target is a safe, app-internal path.
+ * Prevents open-redirect attacks by rejecting absolute URLs (https://evil.com),
+ * protocol-relative URLs (//evil.com) and backslash tricks (/\evil.com).
+ */
+export function safeInternalPath(path: string | null | undefined, fallback = '/account') {
+  if (!path || !path.startsWith('/')) return fallback;
+  if (path.startsWith('//') || path.startsWith('/\\')) return fallback;
+  return path;
+}
+
 /** Generate a unique-ish order number, e.g. BV-1A2B3C4D. */
 export function generateOrderNumber() {
   const random = Math.random().toString(36).slice(2, 8).toUpperCase();

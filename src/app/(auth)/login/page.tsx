@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
+import { safeInternalPath } from '@/lib/utils';
 
 const input =
   'h-11 w-full rounded-md border border-input bg-card px-4 text-sm outline-none ring-ring focus-visible:ring-2';
@@ -12,7 +13,7 @@ const input =
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const callbackUrl = params.get('callbackUrl') || '/account';
+  const callbackUrl = safeInternalPath(params.get('callbackUrl'), '/account');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

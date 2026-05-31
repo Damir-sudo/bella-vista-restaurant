@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/auth/guards';
 import { generateOrderNumber } from '@/lib/utils';
@@ -17,7 +18,11 @@ interface IncomingLine {
   notes?: string;
 }
 
-export default async function CheckoutPage() {
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  searchParams: { error?: string };
+}) {
   const user = await requireUser('/checkout');
 
   async function createOrder(formData: FormData) {
@@ -63,39 +68,62 @@ export default async function CheckoutPage() {
     const tax = +(subtotal * TAX_RATE).toFixed(2);
     const tip = Math.max(0, Number(formData.get('tip')) || 0);
     const total = +(subtotal + tax + deliveryFee + tip).toFixed(2);
-    const orderNumber = generateOrderNumber();
     const str = (k: string) => ((formData.get(k) as string | null)?.trim() || null);
 
-    await prisma.order.create({
-      data: {
-        orderNumber,
-        userId: sessionUser.id,
-        status: 'CONFIRMED',
-        type,
-        paymentStatus: 'PAID',
-        subtotal,
-        tax,
-        deliveryFee,
-        tip,
-        total,
-        contactName: str('contactName') ?? sessionUser.name ?? 'Guest',
-        contactEmail: str('contactEmail') ?? sessionUser.email ?? '',
-        contactPhone: str('contactPhone') ?? '',
-        addressLine1: type === 'DELIVERY' ? str('addressLine1') : null,
-        addressLine2: type === 'DELIVERY' ? str('addressLine2') : null,
-        city: type === 'DELIVERY' ? str('city') : null,
-        postalCode: type === 'DELIVERY' ? str('postalCode') : null,
-        country: type === 'DELIVERY' ? str('country') : null,
-        notes: str('notes'),
-        items: { create: lines },
-        statusEvents: {
-          create: [
-            { status: 'PENDING', message: 'Order received.' },
-            { status: 'CONFIRMED', message: 'Payment confirmed.' },
-          ],
-        },
+    // Delivery orders must have a deliverable address (form fields are optional
+    // because pickup ignores them, so this is enforced server-side).
+    if (type === 'DELIVERY' && (!str('addressLine1') || !str('city'))) {
+      redirect('/checkout?error=address');
+    }
+
+    const data = {
+      userId: sessionUser.id,
+      status: 'CONFIRMED' as const,
+      type,
+      paymentStatus: 'PAID' as const,
+      subtotal,
+      tax,
+      deliveryFee,
+      tip,
+      total,
+      contactName: str('contactName') ?? sessionUser.name ?? 'Guest',
+      contactEmail: str('contactEmail') ?? sessionUser.email ?? '',
+      contactPhone: str('contactPhone') ?? '',
+      addressLine1: type === 'DELIVERY' ? str('addressLine1') : null,
+      addressLine2: type === 'DELIVERY' ? str('addressLine2') : null,
+      city: type === 'DELIVERY' ? str('city') : null,
+      postalCode: type === 'DELIVERY' ? str('postalCode') : null,
+      country: type === 'DELIVERY' ? str('country') : null,
+      notes: str('notes'),
+      items: { create: lines },
+      statusEvents: {
+        create: [
+          { status: 'PENDING' as const, message: 'Order received.' },
+          { status: 'CONFIRMED' as const, message: 'Payment confirmed.' },
+        ],
       },
-    });
+    };
+
+    // Order numbers are generated client-of-DB and are @unique. On the rare
+    // chance of a collision, retry with a fresh number instead of 500-ing a
+    // customer whose payment was already confirmed.
+    let orderNumber = generateOrderNumber();
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await prisma.order.create({ data: { ...data, orderNumber } });
+        break;
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2002' &&
+          attempt < 5
+        ) {
+          orderNumber = generateOrderNumber();
+          continue;
+        }
+        throw err;
+      }
+    }
 
     redirect(`/orders/${orderNumber}?new=1`);
   }
@@ -103,6 +131,11 @@ export default async function CheckoutPage() {
   return (
     <div className="container py-16">
       <h1 className="mb-8 text-4xl font-bold">Checkout</h1>
+      {searchParams.error === 'address' && (
+        <div className="mb-6 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          Please provide a delivery address (street and city), or switch to pickup.
+        </div>
+      )}
       <form action={createOrder} className="grid gap-10 lg:grid-cols-[1fr_360px]">
         <div className="space-y-8">
           {/* Order type */}
