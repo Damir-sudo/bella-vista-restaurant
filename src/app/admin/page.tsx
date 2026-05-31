@@ -1,7 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
-import { DollarSign, ShoppingBag, Users, TrendingUp, ChevronRight, Star, Check, EyeOff, Trash2 } from 'lucide-react';
+import {
+  DollarSign,
+  ShoppingBag,
+  Users,
+  TrendingUp,
+  ChevronRight,
+  Star,
+  Check,
+  EyeOff,
+  Trash2,
+  CalendarDays,
+} from 'lucide-react';
+import type { ReservationStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth/guards';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -9,6 +21,8 @@ import { ORDER_STATUS_LABELS } from '@/lib/constants';
 
 export const metadata: Metadata = { title: 'Admin Dashboard' };
 export const dynamic = 'force-dynamic';
+
+const RES_STATUSES: ReservationStatus[] = ['PENDING', 'CONFIRMED', 'SEATED', 'COMPLETED', 'CANCELLED'];
 
 async function recomputeRating(menuItemId: string) {
   const agg = await prisma.review.aggregate({
@@ -24,7 +38,7 @@ async function recomputeRating(menuItemId: string) {
 
 export default async function AdminDashboardPage() {
   await requireAdmin();
-  const [revenueAgg, orderCount, pendingCount, customerCount, recentOrders, topGroups, reviews] =
+  const [revenueAgg, orderCount, pendingCount, customerCount, recentOrders, topGroups, reviews, reservations] =
     await Promise.all([
       prisma.order.aggregate({ _sum: { total: true }, where: { status: { not: 'CANCELLED' } } }),
       prisma.order.count(),
@@ -48,6 +62,11 @@ export default async function AdminDashboardPage() {
           user: { select: { name: true } },
           menuItem: { select: { name: true, slug: true } },
         },
+      }),
+      prisma.reservation.findMany({
+        take: 12,
+        orderBy: { date: 'desc' },
+        include: { user: { select: { name: true } } },
       }),
     ]);
 
@@ -75,6 +94,16 @@ export default async function AdminDashboardPage() {
     revalidatePath(`/menu/${formData.get('slug')}`);
   }
 
+  async function setReservationStatus(formData: FormData) {
+    'use server';
+    await requireAdmin();
+    const id = String(formData.get('id') ?? '');
+    const status = formData.get('status') as ReservationStatus;
+    if (!id || !RES_STATUSES.includes(status)) return;
+    await prisma.reservation.update({ where: { id }, data: { status } });
+    revalidatePath('/admin');
+    revalidatePath('/contact');
+  }
 
   const revenue = Number(revenueAgg._sum.total ?? 0);
   const avgOrder = orderCount > 0 ? revenue / orderCount : 0;
@@ -177,6 +206,51 @@ export default async function AdminDashboardPage() {
           )}
         </section>
       </div>
+
+      {/* Reservation management */}
+      <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
+          <CalendarDays className="h-5 w-5 text-accent" /> Reservations
+        </h2>
+        {reservations.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">No reservations yet.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {reservations.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <div className="text-sm">
+                  <p className="font-medium">
+                    {formatDate(r.date)} ·{' '}
+                    {r.date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} ·{' '}
+                    party of {r.partySize}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {r.name} · {r.phone}
+                    {r.notes ? ` · ${r.notes}` : ''}
+                  </p>
+                </div>
+                <form action={setReservationStatus} className="flex items-center gap-2">
+                  <input type="hidden" name="id" value={r.id} />
+                  <select
+                    name="status"
+                    defaultValue={r.status}
+                    className="h-9 rounded-md border border-input bg-card px-2 text-sm"
+                  >
+                    {RES_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s.charAt(0) + s.slice(1).toLowerCase()}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="h-9 rounded-md border border-border px-3 text-xs hover:bg-muted">
+                    Update
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* Review moderation */}
       <section className="rounded-xl border border-border bg-card p-6 shadow-soft">
