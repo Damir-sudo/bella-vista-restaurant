@@ -2,13 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, Minus, Plus, ShoppingBag, User } from 'lucide-react';
-import { MAIN_NAV, SITE } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import {
+  MAIN_NAV,
+  SITE,
+  TAX_RATE,
+  DELIVERY_FEE,
+  FREE_DELIVERY_THRESHOLD,
+} from '@/lib/constants';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
-import { useCartStore, selectCartCount } from '@/store/cart-store';
+import { useCartStore, selectCartCount, selectCartSubtotal } from '@/store/cart-store';
 import type { CartLine } from '@/types';
 
 export function Navbar() {
@@ -125,4 +131,64 @@ export function AddToCartButton({
       </Button>
     </div>
   );
+}
+
+
+/** Client island: serializes the persistent cart into the checkout form + live summary. */
+export function CheckoutCartFields() {
+  const items = useCartStore((s) => s.items);
+  const subtotal = useCartStore(selectCartSubtotal);
+  const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD || subtotal === 0 ? 0 : DELIVERY_FEE;
+  const tax = +(subtotal * TAX_RATE).toFixed(2);
+  const total = +(subtotal + tax + deliveryFee).toFixed(2);
+
+  return (
+    <aside className="h-fit rounded-xl border border-border bg-card p-6 shadow-soft lg:sticky lg:top-24">
+      <h2 className="text-xl font-bold">Order Summary</h2>
+      <input type="hidden" name="cart" value={JSON.stringify(items)} readOnly />
+      <ul className="mt-4 space-y-2 text-sm">
+        {items.map((l) => (
+          <li key={l.menuItemId} className="flex justify-between gap-2">
+            <span className="text-muted-foreground">
+              {l.quantity}× {l.name}
+            </span>
+            <span>{formatCurrency(l.price * l.quantity)}</span>
+          </li>
+        ))}
+      </ul>
+      <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
+        <div className="flex justify-between">
+          <dt className="text-muted-foreground">Subtotal</dt>
+          <dd>{formatCurrency(subtotal)}</dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-muted-foreground">Tax</dt>
+          <dd>{formatCurrency(tax)}</dd>
+        </div>
+        <div className="flex justify-between">
+          <dt className="text-muted-foreground">Delivery (if applicable)</dt>
+          <dd>{deliveryFee === 0 ? 'Free' : formatCurrency(deliveryFee)}</dd>
+        </div>
+        <div className="flex justify-between border-t border-border pt-2 text-base">
+          <dt className="font-semibold">Total</dt>
+          <dd className="font-bold text-accent">{formatCurrency(total)}</dd>
+        </div>
+      </dl>
+      <Button type="submit" size="lg" className="mt-6 w-full" disabled={items.length === 0}>
+        Place order
+      </Button>
+      {items.length === 0 && (
+        <p className="mt-2 text-center text-xs text-muted-foreground">Your cart is empty.</p>
+      )}
+    </aside>
+  );
+}
+
+/** Client island: clears the persistent cart once an order is confirmed. */
+export function ClearCartOnMount() {
+  const clear = useCartStore((s) => s.clear);
+  useEffect(() => {
+    clear();
+  }, [clear]);
+  return null;
 }
