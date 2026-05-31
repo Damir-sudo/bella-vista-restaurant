@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, UtensilsCrossed, Leaf, Award } from 'lucide-react';
+import { ArrowRight, UtensilsCrossed, Leaf, Award, Star, Quote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SITE } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
@@ -174,6 +174,124 @@ export default async function HomePage() {
             <Button variant="accent" size="lg" className="mt-8" asChild>
               <Link href="/about">Discover our journey</Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Chef section */}
+      <section className="container py-24">
+        <div className="grid items-center gap-12 md:grid-cols-2">
+          <div className="relative mx-auto aspect-[3/4] w-full max-w-md overflow-hidden rounded-2xl shadow-lift">
+            <Image
+              src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=1000&q=80"
+              alt="Executive Chef Marco Rossi"
+              fill
+              sizes="(max-width: 768px) 100vw, 40vw"
+              className="object-cover"
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
+              <p className="font-display text-2xl font-semibold text-white">Marco Rossi</p>
+              <p className="text-sm text-white/75">Executive Chef</p>
+            </div>
+          </div>
+          <div>
+            <p className="eyebrow">Meet the Chef</p>
+            <h2 className="mt-3 font-display text-4xl font-bold leading-tight md:text-5xl">
+              Where heritage meets the modern table
+            </h2>
+            <div className="my-6 hairline" />
+            <p className="leading-relaxed text-muted-foreground">
+              Born in Bologna and trained across the kitchens of Tuscany and Rome, Chef Marco brings
+              three decades of craft to Bella Vista. His philosophy is simple — respect the
+              ingredient, honour the tradition, and serve every guest like family.
+            </p>
+            <p className="mt-4 font-display text-2xl italic text-accent">
+              “Cucina è amore — cooking is love made visible.”
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Gallery */}
+      <section className="container pb-24">
+        <div className="mx-auto mb-12 max-w-2xl text-center">
+          <p className="eyebrow">The Experience</p>
+          <h2 className="mt-3 font-display text-4xl font-bold md:text-5xl">A feast for every sense</h2>
+          <div className="mx-auto mt-5 h-px w-20 bg-gradient-to-r from-transparent via-accent to-transparent" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:grid-rows-2">
+          {[
+            { src: 'photo-1517248135467-4c7edcad34c4', span: 'col-span-2 row-span-2' },
+            { src: 'photo-1559339352-11d035aa65de', span: '' },
+            { src: 'photo-1466978913421-dad2ebd01d17', span: '' },
+            { src: 'photo-1555396273-367ea4eb4db5', span: '' },
+            { src: 'photo-1424847651672-bf20a4b0982b', span: '' },
+          ].map((g, i) => (
+            <div
+              key={i}
+              className={`group relative overflow-hidden rounded-xl ${g.span} ${i === 0 ? 'aspect-square md:aspect-auto' : 'aspect-square'}`}
+            >
+              <Image
+                src={`https://images.unsplash.com/${g.src}?auto=format&fit=crop&w=900&q=80`}
+                alt="Bella Vista ambience"
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-primary/0 transition-colors duration-500 group-hover:bg-primary/20" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="bg-muted/40 py-24">
+        <div className="container">
+          <div className="mx-auto mb-14 max-w-2xl text-center">
+            <p className="eyebrow">Guest Love</p>
+            <h2 className="mt-3 font-display text-4xl font-bold md:text-5xl">What our guests say</h2>
+            <div className="mx-auto mt-5 h-px w-20 bg-gradient-to-r from-transparent via-accent to-transparent" />
+          </div>
+          <div className="grid gap-7 md:grid-cols-3">
+            {[
+              {
+                quote:
+                  'The finest Italian dining in the city. Every dish felt like a love letter to Italy.',
+                name: 'Elena M.',
+                role: 'Food Critic',
+              },
+              {
+                quote:
+                  'From the truffle tagliatelle to the tiramisù — flawless. The ambience is pure magic.',
+                name: 'James P.',
+                role: 'Regular Guest',
+              },
+              {
+                quote:
+                  'Impeccable service and authentic flavours. Bella Vista is now our anniversary tradition.',
+                name: 'Sofia & Luca',
+                role: 'Guests since 2019',
+              },
+            ].map((t) => (
+              <figure
+                key={t.name}
+                className="card-premium flex flex-col p-8"
+              >
+                <Quote className="h-8 w-8 text-accent/50" />
+                <div className="mt-4 flex gap-0.5 text-accent">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-accent" />
+                  ))}
+                </div>
+                <blockquote className="mt-4 flex-1 leading-relaxed text-foreground/90">
+                  “{t.quote}”
+                </blockquote>
+                <figcaption className="mt-6 border-t border-border/60 pt-4">
+                  <p className="font-semibold">{t.name}</p>
+                  <p className="text-sm text-muted-foreground">{t.role}</p>
+                </figcaption>
+              </figure>
+            ))}
           </div>
         </div>
       </section>
