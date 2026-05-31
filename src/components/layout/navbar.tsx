@@ -2,17 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, User } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Minus, Plus, ShoppingBag, User } from 'lucide-react';
 import { MAIN_NAV, SITE } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { useCartStore, selectCartCount } from '@/store/cart-store';
+import type { CartLine } from '@/types';
 
 export function Navbar() {
   const pathname = usePathname();
   const count = useCartStore(selectCartCount);
-  const openCart = useCartStore((s) => s.openCart);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -50,18 +51,78 @@ export function Navbar() {
             size="icon"
             aria-label="Open cart"
             className="relative"
-            onClick={openCart}
+            asChild
           >
-            <ShoppingBag className="h-5 w-5" />
-            {count > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
-                {count}
-              </span>
-            )}
+            <Link href="/cart">
+              <ShoppingBag className="h-5 w-5" />
+              {count > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
+                  {count}
+                </span>
+              )}
+            </Link>
           </Button>
         </div>
       </div>
       <span className="sr-only">{SITE.name}</span>
     </header>
+  );
+}
+
+/** Client island for adding a dish to the persistent cart. */
+export function AddToCartButton({
+  item,
+  withQuantity = false,
+  className,
+}: {
+  item: Omit<CartLine, 'quantity'>;
+  withQuantity?: boolean;
+  className?: string;
+}) {
+  const addItem = useCartStore((s) => s.addItem);
+  const [qty, setQty] = useState(1);
+  const [added, setAdded] = useState(false);
+
+  const handleAdd = () => {
+    addItem(item, withQuantity ? qty : 1);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
+
+  if (!withQuantity) {
+    return (
+      <Button variant="accent" size="sm" className={className} onClick={handleAdd}>
+        {added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+        {added ? 'Added' : 'Add'}
+      </Button>
+    );
+  }
+
+  return (
+    <div className={cn('flex items-center gap-3', className)}>
+      <div className="flex items-center rounded-md border border-border">
+        <button
+          type="button"
+          aria-label="Decrease quantity"
+          className="px-3 py-2 text-muted-foreground hover:text-foreground"
+          onClick={() => setQty((q) => Math.max(1, q - 1))}
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <span className="w-8 text-center text-sm font-medium">{qty}</span>
+        <button
+          type="button"
+          aria-label="Increase quantity"
+          className="px-3 py-2 text-muted-foreground hover:text-foreground"
+          onClick={() => setQty((q) => q + 1)}
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+      <Button variant="accent" size="lg" onClick={handleAdd}>
+        {added ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
+        {added ? 'Added to cart' : 'Add to cart'}
+      </Button>
+    </div>
   );
 }

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, Clock, Flame } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { formatCurrency } from '@/lib/utils';
+import { AddToCartButton } from '@/components/layout/navbar';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,6 +78,19 @@ export default async function DishPage({ params }: DishPageProps) {
             {dish.isVegetarian && <Tag>Vegetarian</Tag>}
             {dish.isVegan && <Tag>Vegan</Tag>}
             {dish.isGlutenFree && <Tag>Gluten-free</Tag>}
+          </div>
+
+          <div className="mt-8">
+            <AddToCartButton
+              withQuantity
+              item={{
+                menuItemId: dish.id,
+                name: dish.name,
+                slug: dish.slug,
+                price: Number(dish.price),
+                image: dish.image,
+              }}
+            />
           </div>
 
           <div className="mt-6 flex flex-wrap gap-6 text-sm text-muted-foreground">
