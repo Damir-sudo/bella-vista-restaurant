@@ -54,8 +54,11 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
   return (
     <div className="container py-16">
       <header className="mx-auto mb-10 max-w-2xl text-center">
-        <p className="text-sm uppercase tracking-[0.3em] text-accent">Our Menu</p>
-        <h1 className="mt-3 text-4xl font-bold md:text-5xl">Crafted daily, served with passion</h1>
+        <p className="eyebrow">Our Menu</p>
+        <h1 className="mt-3 font-display text-5xl font-bold md:text-6xl">
+          Crafted daily, served with passion
+        </h1>
+        <div className="mx-auto mt-5 h-px w-20 bg-gradient-to-r from-transparent via-accent to-transparent" />
       </header>
 
       {/* Search */}
@@ -95,11 +98,12 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
           No dishes match your search. Try a different term or category.
         </p>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
+        <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item, i) => (
             <div
               key={item.id}
-              className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-soft transition-shadow hover:shadow-lift"
+              className="card-premium group flex animate-fade-up flex-col overflow-hidden"
+              style={{ animationDelay: `${(i % 3) * 80}ms` }}
             >
               <Link href={`/menu/${item.slug}`} className="block">
                 <div className="relative aspect-[4/3] overflow-hidden bg-muted">
@@ -109,31 +113,28 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
                       alt={item.name}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                   {item.isFeatured && (
-                    <span className="absolute left-3 top-3 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
+                    <span className="absolute left-4 top-4 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground shadow-soft">
                       Chef’s pick
                     </span>
                   )}
-                </div>
-              </Link>
-              <div className="flex flex-1 flex-col p-5">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                  {item.category.name}
-                </p>
-                <div className="mt-1 flex items-start justify-between gap-3">
-                  <Link href={`/menu/${item.slug}`}>
-                    <h3 className="font-display text-xl font-semibold hover:text-primary">
-                      {item.name}
-                    </h3>
-                  </Link>
-                  <span className="shrink-0 font-semibold text-accent">
+                  <span className="absolute bottom-4 right-4 rounded-full bg-background/90 px-3 py-1 text-sm font-semibold text-accent shadow-soft backdrop-blur">
                     {formatCurrency(Number(item.price))}
                   </span>
                 </div>
-                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+              </Link>
+              <div className="flex flex-1 flex-col p-6">
+                <p className="eyebrow text-[0.65rem]">{item.category.name}</p>
+                <Link href={`/menu/${item.slug}`}>
+                  <h3 className="mt-2 font-display text-2xl font-semibold transition-colors group-hover:text-accent">
+                    {item.name}
+                  </h3>
+                </Link>
+                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
                   {item.description}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
@@ -141,7 +142,7 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
                   {item.isVegan && <Tag>Vegan</Tag>}
                   {item.isGlutenFree && <Tag>Gluten-free</Tag>}
                 </div>
-                <div className="mt-4 flex items-center justify-end pt-2">
+                <div className="mt-5 flex items-center justify-end border-t border-border/60 pt-4">
                   <AddToCartButton
                     item={{
                       menuItemId: item.id,
