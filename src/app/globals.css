@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Bella Vista design tokens.
+ * HSL channels consumed by Tailwind via hsl(var(--token)).
+ */
+@layer base {
+  :root {
+    --background: 36 33% 97%; /* warm ivory */
+    --foreground: 24 18% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 24 18% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 18% 10%;
+
+    --primary: 0 54% 36%; /* Bella red */
+    --primary-foreground: 36 33% 97%;
+
+    --secondary: 72 28% 30%; /* olive */
+    --secondary-foreground: 36 33% 97%;
+
+    --accent: 43 53% 54%; /* gold */
+    --accent-foreground: 24 30% 12%;
+
+    --muted: 36 30% 90%;
+    --muted-foreground: 24 10% 38%;
+
+    --destructive: 3 71% 41%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 34 25% 84%;
+    --input: 34 25% 84%;
+    --ring: 43 53% 54%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 24 24% 5%; /* espresso */
+    --foreground: 36 30% 92%;
+
+    --card: 24 26% 7%;
+    --card-foreground: 36 30% 92%;
+
+    --popover: 24 26% 7%;
+    --popover-foreground: 36 30% 92%;
+
+    --primary: 3 52% 50%;
+    --primary-foreground: 36 33% 97%;
+
+    --secondary: 68 30% 44%;
+    --secondary-foreground: 24 24% 6%;
+
+    --accent: 43 65% 63%;
+    --accent-foreground: 24 30% 8%;
+
+    --muted: 26 20% 12%;
+    --muted-foreground: 36 12% 66%;
+
+    --destructive: 3 65% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 28 18% 16%;
+    --input: 28 18% 16%;
+    --ring: 43 65% 63%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer utilities {
+  .container-px {
+    @apply px-5 sm:px-8;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}

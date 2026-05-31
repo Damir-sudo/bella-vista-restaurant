@@ -1,0 +1,247 @@
+// Bella Vista — Prisma schema
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum OrderType {
+  DELIVERY
+  PICKUP
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum SpiceLevel {
+  NONE
+  MILD
+  MEDIUM
+  HOT
+}
+
+// ───────────────────────────── Users ─────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(CUSTOMER)
+  phone        String?
+  image        String?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  addresses Address[]
+  orders    Order[]
+  reviews   Review[]
+  cartItems CartItem[]
+
+  @@index([role])
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  label      String  @default("Home")
+  line1      String
+  line2      String?
+  city       String
+  postalCode String
+  country    String  @default("United States")
+  phone      String?
+  isDefault  Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─────────────────────────── Catalog ─────────────────────────────
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  image       String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  menuItems MenuItem[]
+
+  @@index([isActive, sortOrder])
+}
+
+model MenuItem {
+  id            String     @id @default(cuid())
+  name          String
+  slug          String     @unique
+  description   String
+  ingredients   String?
+  price         Decimal    @db.Decimal(10, 2)
+  image         String?
+  categoryId    String
+  isAvailable   Boolean    @default(true)
+  isFeatured    Boolean    @default(false)
+  isVegetarian  Boolean    @default(false)
+  isVegan       Boolean    @default(false)
+  isGlutenFree  Boolean    @default(false)
+  spiceLevel    SpiceLevel @default(NONE)
+  calories      Int?
+  prepTimeMin   Int?
+  ratingAverage Float      @default(0)
+  ratingCount   Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+  reviews    Review[]
+  cartItems  CartItem[]
+
+  @@index([categoryId])
+  @@index([isAvailable, isFeatured])
+}
+
+// ──────────────────────────── Cart ───────────────────────────────
+// Optional server-side persistence of a customer's cart. The primary
+// cart lives client-side (Zustand); this allows cross-device sync.
+
+model CartItem {
+  id         String   @id @default(cuid())
+  userId     String
+  menuItemId String
+  quantity   Int      @default(1)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, menuItemId])
+  @@index([userId])
+}
+
+// ─────────────────────────── Orders ──────────────────────────────
+
+model Order {
+  id            String        @id @default(cuid())
+  orderNumber   String        @unique
+  userId        String
+  status        OrderStatus   @default(PENDING)
+  type          OrderType     @default(DELIVERY)
+  paymentStatus PaymentStatus @default(UNPAID)
+  paymentIntentId String?
+
+  // Money (stored as Decimal for accuracy)
+  subtotal    Decimal @db.Decimal(10, 2)
+  tax         Decimal @db.Decimal(10, 2)
+  deliveryFee Decimal @db.Decimal(10, 2) @default(0)
+  tip         Decimal @db.Decimal(10, 2) @default(0)
+  total       Decimal @db.Decimal(10, 2)
+
+  // Contact + delivery snapshot (kept on the order so history is immutable)
+  contactName  String
+  contactEmail String
+  contactPhone String
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  postalCode   String?
+  country      String?
+  notes        String?
+
+  estimatedReadyAt DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user         User               @relation(fields: [userId], references: [id])
+  items        OrderItem[]
+  statusEvents OrderStatusEvent[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  orderId      String
+  menuItemId   String?
+  nameSnapshot String
+  unitPrice    Decimal @db.Decimal(10, 2)
+  quantity     Int
+  lineTotal    Decimal @db.Decimal(10, 2)
+  notes        String?
+
+  order    Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+// Tracking timeline — one row per status transition.
+model OrderStatusEvent {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  message   String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ─────────────────────────── Reviews ─────────────────────────────
+
+model Review {
+  id         String   @id @default(cuid())
+  userId     String
+  menuItemId String
+  rating     Int // 1..5 (validated in service/zod layer)
+  title      String?
+  body       String?
+  isApproved Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, menuItemId])
+  @@index([menuItemId, isApproved])
+}
