@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { formatCurrency, cn } from '@/lib/utils';
+import { AddToCartButton } from '@/components/layout/navbar';
 
 export const metadata: Metadata = {
   title: 'Menu',
@@ -96,33 +97,38 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
-            <Link
+            <div
               key={item.id}
-              href={`/menu/${item.slug}`}
-              className="group overflow-hidden rounded-xl border border-border bg-card shadow-soft transition-shadow hover:shadow-lift"
+              className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-soft transition-shadow hover:shadow-lift"
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-                {item.image && (
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                )}
-                {item.isFeatured && (
-                  <span className="absolute left-3 top-3 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
-                    Chef’s pick
-                  </span>
-                )}
-              </div>
-              <div className="p-5">
+              <Link href={`/menu/${item.slug}`} className="block">
+                <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                  {item.image && (
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  )}
+                  {item.isFeatured && (
+                    <span className="absolute left-3 top-3 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
+                      Chef’s pick
+                    </span>
+                  )}
+                </div>
+              </Link>
+              <div className="flex flex-1 flex-col p-5">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">
                   {item.category.name}
                 </p>
                 <div className="mt-1 flex items-start justify-between gap-3">
-                  <h3 className="font-display text-xl font-semibold">{item.name}</h3>
+                  <Link href={`/menu/${item.slug}`}>
+                    <h3 className="font-display text-xl font-semibold hover:text-primary">
+                      {item.name}
+                    </h3>
+                  </Link>
                   <span className="shrink-0 font-semibold text-accent">
                     {formatCurrency(Number(item.price))}
                   </span>
@@ -135,8 +141,19 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
                   {item.isVegan && <Tag>Vegan</Tag>}
                   {item.isGlutenFree && <Tag>Gluten-free</Tag>}
                 </div>
+                <div className="mt-4 flex items-center justify-end pt-2">
+                  <AddToCartButton
+                    item={{
+                      menuItemId: item.id,
+                      name: item.name,
+                      slug: item.slug,
+                      price: Number(item.price),
+                      image: item.image,
+                    }}
+                  />
+                </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}
