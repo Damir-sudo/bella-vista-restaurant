@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/auth/guards';
-import { generateOrderNumber } from '@/lib/utils';
+import { generateOrderNumber, sendTelegramMessage } from '@/lib/utils';
 import { TAX_RATE, DELIVERY_FEE, FREE_DELIVERY_THRESHOLD } from '@/lib/constants';
 import { CheckoutCartFields } from '@/components/layout/navbar';
 
@@ -124,6 +124,19 @@ export default async function CheckoutPage({
         throw err;
       }
     }
+
+    // Notify staff of the new order. Must never break checkout, so this is
+    // fire-and-forget and sendTelegramMessage swallows/logs its own errors.
+    const itemsList = lines.map((l) => `${l.quantity}x ${l.nameSnapshot}`).join('\n');
+    await sendTelegramMessage(
+      `🛒 New Order\n\n` +
+        `Order: #${orderNumber}\n` +
+        `Customer: ${data.contactName}\n` +
+        `Phone: ${data.contactPhone}\n` +
+        `Type: ${data.type}\n` +
+        `Items:\n${itemsList}\n\n` +
+        `Total: $${data.total.toFixed(2)}`,
+    );
 
     redirect(`/orders/${orderNumber}?new=1`);
   }
