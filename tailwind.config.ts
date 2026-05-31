@@ -66,12 +66,28 @@ const config: Config = {
       },
       boxShadow: {
         soft: '0 4px 24px -8px rgb(0 0 0 / 0.12)',
-        lift: '0 18px 48px -16px rgb(0 0 0 / 0.28)',
+        lift: '0 28px 60px -22px rgb(0 0 0 / 0.32)',
+        glow: '0 0 0 1px hsl(var(--accent) / 0.4), 0 12px 40px -12px hsl(var(--accent) / 0.35)',
       },
       keyframes: {
         'fade-in': {
           from: { opacity: '0', transform: 'translateY(8px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-up': {
+          from: { opacity: '0', transform: 'translateY(24px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-down': {
+          from: { opacity: '0', transform: 'translateY(-16px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
         },
         'accordion-down': {
           from: { height: '0' },
@@ -84,6 +100,9 @@ const config: Config = {
       },
       animation: {
         'fade-in': 'fade-in 0.5s ease-out both',
+        'fade-up': 'fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'fade-down': 'fade-down 0.6s ease-out both',
+        float: 'float 6s ease-in-out infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },

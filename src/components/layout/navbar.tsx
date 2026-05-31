@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Check, Minus, Plus, ShoppingBag, User } from 'lucide-react';
+import { Check, Menu, Minus, Plus, ShoppingBag, User, X } from 'lucide-react';
 import {
   MAIN_NAV,
   SITE,
@@ -21,57 +21,109 @@ import type { CartLine } from '@/types';
 export function Navbar() {
   const pathname = usePathname();
   const count = useCartStore(selectCartCount);
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => setMenuOpen(false), [pathname]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="font-display text-2xl font-bold tracking-tight text-primary">
+    <header
+      className={cn(
+        'sticky top-0 z-50 transition-all duration-300',
+        scrolled
+          ? 'border-b border-border/60 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/65'
+          : 'border-b border-transparent bg-background/40 backdrop-blur-sm',
+      )}
+    >
+      <div className="container flex h-[4.5rem] items-center justify-between gap-4">
+        <Link href="/" className="group flex items-center gap-2" aria-label={SITE.name}>
+          <span className="font-display text-[1.65rem] font-bold leading-none tracking-tight">
             Bella<span className="text-accent">Vista</span>
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {MAIN_NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'text-sm font-medium transition-colors hover:text-primary',
-                pathname === item.href ? 'text-primary' : 'text-muted-foreground',
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-9 md:flex">
+          {MAIN_NAV.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'group relative text-sm font-medium tracking-wide transition-colors hover:text-foreground',
+                  active ? 'text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {item.label}
+                <span
+                  className={cn(
+                    'absolute -bottom-1.5 left-0 h-px bg-accent transition-all duration-300',
+                    active ? 'w-full' : 'w-0 group-hover:w-full',
+                  )}
+                />
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" aria-label="Account" asChild>
+          <Button variant="ghost" size="icon" aria-label="Account" asChild className="hidden sm:inline-flex">
             <Link href="/account">
               <User className="h-5 w-5" />
             </Link>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Open cart"
-            className="relative"
-            asChild
-          >
+          <Button variant="ghost" size="icon" aria-label="Open cart" className="relative" asChild>
             <Link href="/cart">
               <ShoppingBag className="h-5 w-5" />
               {count > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-semibold text-accent-foreground">
                   {count}
                 </span>
               )}
             </Link>
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Toggle menu"
+            className="md:hidden"
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
         </div>
       </div>
-      <span className="sr-only">{SITE.name}</span>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <nav className="animate-fade-down border-t border-border/60 bg-background/95 backdrop-blur-md md:hidden">
+          <div className="container flex flex-col py-4">
+            {MAIN_NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'border-b border-border/40 py-3 text-sm font-medium',
+                  pathname === item.href ? 'text-accent' : 'text-foreground',
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link href="/account" className="py-3 text-sm font-medium text-foreground">
+              My Account
+            </Link>
+          </div>
+        </nav>
+      )}
     </header>
   );
 }
