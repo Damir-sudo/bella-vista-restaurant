@@ -3,70 +3,70 @@
 @tailwind utilities;
 
 /*
- * Bella Vista design tokens.
+ * Bella Vista — luxury Italian design tokens.
  * HSL channels consumed by Tailwind via hsl(var(--token)).
  */
 @layer base {
   :root {
-    --background: 36 33% 97%; /* warm ivory */
-    --foreground: 24 18% 10%;
+    --background: 40 38% 97%; /* warm ivory */
+    --foreground: 22 16% 12%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 24 18% 10%;
+    --card: 40 50% 99%;
+    --card-foreground: 22 16% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 24 18% 10%;
+    --popover: 40 50% 99%;
+    --popover-foreground: 22 16% 12%;
 
-    --primary: 0 54% 36%; /* Bella red */
-    --primary-foreground: 36 33% 97%;
+    --primary: 351 56% 29%; /* bordeaux */
+    --primary-foreground: 40 38% 97%;
 
-    --secondary: 72 28% 30%; /* olive */
-    --secondary-foreground: 36 33% 97%;
+    --secondary: 74 22% 31%; /* olive */
+    --secondary-foreground: 40 38% 97%;
 
-    --accent: 43 53% 54%; /* gold */
-    --accent-foreground: 24 30% 12%;
+    --accent: 41 56% 51%; /* gold */
+    --accent-foreground: 22 30% 12%;
 
-    --muted: 36 30% 90%;
-    --muted-foreground: 24 10% 38%;
+    --muted: 38 30% 92%;
+    --muted-foreground: 24 9% 40%;
 
-    --destructive: 3 71% 41%;
+    --destructive: 3 68% 42%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 34 25% 84%;
-    --input: 34 25% 84%;
-    --ring: 43 53% 54%;
+    --border: 36 26% 86%;
+    --input: 36 26% 86%;
+    --ring: 41 56% 51%;
 
-    --radius: 0.75rem;
+    --radius: 0.85rem;
   }
 
   .dark {
-    --background: 24 24% 5%; /* espresso */
-    --foreground: 36 30% 92%;
+    --background: 24 20% 6%; /* espresso */
+    --foreground: 38 32% 91%;
 
-    --card: 24 26% 7%;
-    --card-foreground: 36 30% 92%;
+    --card: 24 18% 9%;
+    --card-foreground: 38 32% 91%;
 
-    --popover: 24 26% 7%;
-    --popover-foreground: 36 30% 92%;
+    --popover: 24 18% 9%;
+    --popover-foreground: 38 32% 91%;
 
-    --primary: 3 52% 50%;
-    --primary-foreground: 36 33% 97%;
+    --primary: 351 54% 47%;
+    --primary-foreground: 40 38% 97%;
 
-    --secondary: 68 30% 44%;
-    --secondary-foreground: 24 24% 6%;
+    --secondary: 70 24% 46%;
+    --secondary-foreground: 24 20% 7%;
 
-    --accent: 43 65% 63%;
+    --accent: 41 62% 60%;
     --accent-foreground: 24 30% 8%;
 
-    --muted: 26 20% 12%;
-    --muted-foreground: 36 12% 66%;
+    --muted: 26 14% 13%;
+    --muted-foreground: 36 11% 64%;
 
-    --destructive: 3 65% 60%;
+    --destructive: 3 64% 58%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 28 18% 16%;
-    --input: 28 18% 16%;
-    --ring: 43 65% 63%;
+    --border: 30 12% 17%;
+    --input: 30 12% 17%;
+    --ring: 41 62% 60%;
   }
 }
 
@@ -74,17 +74,64 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings:
-      'rlig' 1,
-      'calt' 1;
+    font-feature-settings: 'rlig' 1, 'calt' 1, 'ss01' 1;
   }
-  h1,
-  h2,
-  h3,
-  h4 {
+  h1, h2, h3, h4 {
     @apply font-display tracking-tight;
+  }
+  ::selection {
+    background: hsl(var(--accent) / 0.3);
+  }
+  /* Refined scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--accent) / 0.5);
+    border-radius: 9999px;
+    border: 2px solid hsl(var(--muted));
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--accent) / 0.8);
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.32em] text-accent;
+  }
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-accent via-accent to-secondary bg-clip-text text-transparent;
+  }
+  .hairline {
+    @apply h-px w-16 bg-gradient-to-r from-transparent via-accent to-transparent;
+  }
+  .card-premium {
+    @apply rounded-2xl border border-border/70 bg-card shadow-soft transition-all duration-500 hover:-translate-y-1 hover:shadow-lift;
+  }
+  .btn-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgb(255 255 255 / 0.25) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+  }
+  .btn-sheen:hover::after {
+    transform: translateX(120%);
   }
 }
 
