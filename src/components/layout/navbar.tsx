@@ -15,6 +15,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { useCartStore, selectCartCount, selectCartSubtotal } from '@/store/cart-store';
+import { signOut } from 'next-auth/react';
 import type { CartLine } from '@/types';
 
 export function Navbar() {
@@ -191,4 +192,20 @@ export function ClearCartOnMount() {
     clear();
   }, [clear]);
   return null;
+}
+
+
+/** Client island: sign the user out. */
+export function SignOutButton({ className }: { className?: string }) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className={className}
+      onClick={() => signOut({ callbackUrl: '/' })}
+    >
+      Sign out
+    </Button>
+  );
 }
