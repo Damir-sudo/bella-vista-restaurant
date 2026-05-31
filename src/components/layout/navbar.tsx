@@ -14,6 +14,7 @@ import {
 import { cn, formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { Logo } from '@/components/layout/logo';
 import { useCartStore, selectCartCount, selectCartSubtotal } from '@/store/cart-store';
 import { signOut } from 'next-auth/react';
 import type { CartLine } from '@/types';
@@ -44,9 +45,7 @@ export function Navbar() {
     >
       <div className="container flex h-[4.5rem] items-center justify-between gap-4">
         <Link href="/" className="group flex items-center gap-2" aria-label={SITE.name}>
-          <span className="font-display text-[1.65rem] font-bold leading-none tracking-tight">
-            Bella<span className="text-accent">Vista</span>
-          </span>
+          <Logo size={38} />
         </Link>
 
         <nav className="hidden items-center gap-9 md:flex">

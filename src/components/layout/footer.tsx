@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Facebook, Instagram, MapPin, Phone, Mail, Twitter } from 'lucide-react';
 import { MAIN_NAV, SITE } from '@/lib/constants';
+import { Logo } from '@/components/layout/logo';
 
 export function Footer() {
   return (
@@ -9,9 +10,7 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-12">
           {/* Brand */}
           <div className="md:col-span-4 space-y-5">
-            <span className="font-display text-3xl font-bold tracking-tight">
-              Bella<span className="text-accent">Vista</span>
-            </span>
+            <Logo size={44} />
             <div className="hairline" />
             <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">{SITE.description}</p>
             <div className="flex gap-3 pt-1">
